@@ -26,6 +26,19 @@ Requirements: PHP and Composer, Node.js and npm, and the PHP SQLite extension.
 
 The application uses SQLite by default. Configure Telegram credentials in the local `.env` only if you want to test Telegram alerts. Never publish `.env` or real credentials.
 
+## Demo access
+
+On a fresh seeded database, use this shared demo account:
+
+- Email: `admin@radarkognitif.mil.id`
+- Password: `password123`
+
+This account is only for the competition prototype. The dashboard's social signals and cognitive metrics are demo data. Do not reuse this password for any other account.
+
+## Render demo deployment
+
+The repository includes a Render Blueprint and Docker configuration. The demo uses SQLite on the service filesystem, so changes may reset when Render replaces the instance. Do not add real credentials to the Blueprint; configure any optional secrets in the Render dashboard.
+
 ## Technology
 
 - Laravel 13 and PHP
