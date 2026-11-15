@@ -31,6 +31,21 @@ class PasswordUpdateTest extends TestCase
         $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
     }
 
+    public function test_shared_tester_cannot_change_its_password(): void
+    {
+        $tester = User::factory()->create(['email' => User::SHARED_TESTER_EMAIL]);
+
+        $this->actingAs($tester)
+            ->put('/password', [
+                'current_password' => 'password',
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ])
+            ->assertForbidden();
+
+        $this->assertTrue(Hash::check('password', $tester->refresh()->password));
+    }
+
     public function test_correct_password_must_be_provided_to_update_password(): void
     {
         $user = User::factory()->create();

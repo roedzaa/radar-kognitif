@@ -2,10 +2,8 @@
     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
         <div><p class="font-mono text-[8px] tracking-[.2em] text-emerald-500">OMNI-SOURCE AGGREGATOR</p><h2 class="mt-1 text-sm font-bold tracking-wider text-white">INTELLIGENCE FEED</h2></div>
         <div class="flex flex-wrap gap-2">
-            @auth
-                <form method="POST" action="{{ route('osint.test.telegram') }}">@csrf<button class="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-[8px] font-bold text-slate-400 hover:text-white">TEST EWS</button></form>
-                <form method="POST" action="{{ route('osint.fetch') }}">@csrf<button class="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 font-mono text-[8px] font-bold text-emerald-300 hover:bg-emerald-500/20">JALANKAN FULL SCAN</button></form>
-            @endauth
+            <form method="POST" action="{{ route('osint.test.telegram') }}">@csrf<button class="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-[8px] font-bold text-slate-400 hover:text-white">TEST EWS</button></form>
+            <form method="POST" action="{{ route('osint.fetch') }}">@csrf<button class="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 font-mono text-[8px] font-bold text-emerald-300 hover:bg-emerald-500/20">JALANKAN FULL SCAN</button></form>
         </div>
     </div>
     <div class="overflow-x-auto">
@@ -21,7 +19,7 @@
                         <td class="whitespace-nowrap px-5 py-4 font-mono text-[9px] text-slate-600">{{ $item->waktu_publish?->format('d/m/Y H:i') ?? 'N/A' }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="px-5 py-12 text-center font-mono text-[10px] text-slate-600">BELUM ADA DATA</td></tr>
+                    <tr><td colspan="4" class="px-5 py-12 text-center font-mono text-[10px] text-slate-600">BELUM ADA DATA // JALANKAN FULL SCAN</td></tr>
                 @endforelse
             </tbody>
         </table>

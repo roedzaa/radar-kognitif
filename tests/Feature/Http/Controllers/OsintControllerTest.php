@@ -13,22 +13,6 @@ class OsintControllerTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_guest_can_view_a_read_only_public_demo(): void
-    {
-        $response = $this->get(route('osint.index'));
-
-        $response
-            ->assertOk()
-            ->assertViewIs('dashboard.index')
-            ->assertSee('DEMO PUBLIK')
-            ->assertSee('MODE BACA SAJA')
-            ->assertSee('bukan intelijen terverifikasi')
-            ->assertDontSee('EKSPOR INTELIJEN')
-            ->assertDontSee('TEST EWS')
-            ->assertDontSee('JALANKAN FULL SCAN')
-            ->assertDontSee('LOGOUT');
-    }
-
     public function test_authenticated_operator_can_view_cognitive_dashboard_with_profile_details(): void
     {
         $user = User::factory()->create([
@@ -54,13 +38,16 @@ class OsintControllerTest extends TestCase
             ->assertSee('Operator Siber')
             ->assertSee('operator@example.test')
             ->assertSee('ANALISIS SIBER SOSIAL')
+            ->assertSee('BELUM ADA DATA SENTIMEN DARI SUMBER TERHUBUNG')
+            ->assertSee('BELUM ADA DATA JEJARING SOSIAL')
             ->assertSee('FILTER LAYER')
             ->assertSee('data-map-filter="Merah"', false)
             ->assertSee('L.layerGroup()', false)
             ->assertSee('L.divIcon', false)
             ->assertSee('Intrusi kritis terdeteksi di sektor komando')
-            ->assertSee('PETA JARINGAN BUZZER &amp; BOTNET (SNA)', false)
-            ->assertSee('SYSTEM ACTIVITY CONSOLE')
+            ->assertDontSee('AI FUSION ONLINE')
+            ->assertDontSee('87.4%')
+            ->assertSee('STATUS PEMINDAIAN')
             ->assertSee('EKSPOR INTELIJEN (PDF)')
             ->assertSee(route('osint.export.pdf'))
             ->assertSee('const liveMetricsUrl', false)
@@ -122,7 +109,7 @@ class OsintControllerTest extends TestCase
             ->assertDontSee('#IsuLama');
     }
 
-    public function test_fetch_imports_every_channel_and_persists_dynamic_coordinates(): void
+    public function test_fetch_imports_rss_reports_without_inventing_coordinates(): void
     {
         $user = User::factory()->create();
 
@@ -153,6 +140,11 @@ class OsintControllerTest extends TestCase
                 200,
                 ['Content-Type' => 'text/xml'],
             ),
+            'https://www.tribunnews.com/rss' => Http::response(
+                $this->rss('Laporan keamanan dari Papua', 'https://example.com/tribun'),
+                200,
+                ['Content-Type' => 'text/xml'],
+            ),
         ]);
 
         $response = $this
@@ -162,9 +154,12 @@ class OsintControllerTest extends TestCase
 
         $response
             ->assertRedirect(route('osint.index'))
-            ->assertSessionHas('success');
+            ->assertSessionHas(
+                'success',
+                'Pemindaian selesai. 6 laporan dari feed RSS publik diproses; sumber media sosial belum terhubung.',
+            );
 
-        $this->assertDatabaseCount('berita_osint', 17);
+        $this->assertDatabaseCount('berita_osint', 6);
         $this->assertDatabaseHas('berita_osint', [
             'judul' => 'Insiden keamanan siber Jakarta',
             'sumber' => 'Google News - Cybersecurity Indonesia',
@@ -173,26 +168,21 @@ class OsintControllerTest extends TestCase
             'judul' => 'Kabar strategis Natuna',
             'sumber' => 'CNBC Indonesia',
         ]);
-        $this->assertDatabaseHas('berita_osint', ['sumber' => 'X/Twitter Intelligence']);
-        $this->assertDatabaseHas('berita_osint', ['sumber' => 'TikTok Viral Graph']);
-        $this->assertDatabaseHas('berita_osint', ['sumber' => 'IG Dark Web']);
-        $this->assertDatabaseHas('berita_osint', ['sumber' => 'Facebook Influence Monitor']);
-        $this->assertDatabaseHas('berita_osint', ['sumber' => 'Threads Narrative Mesh']);
-        $this->assertSame(12, BeritaOsint::where('judul', 'like', '[SIMULASI%')->count());
+        $this->assertDatabaseHas('berita_osint', [
+            'judul' => 'Laporan keamanan dari Papua',
+            'sumber' => 'Tribun News',
+        ]);
+        $this->assertSame(0, BeritaOsint::where('judul', 'like', '[SIMULASI%')->count());
 
         $beritaJakarta = BeritaOsint::where('judul', 'Insiden keamanan siber Jakarta')->firstOrFail();
         $beritaFallback = BeritaOsint::where('judul', 'Perkembangan nasional terbaru')->firstOrFail();
 
-        $this->assertGreaterThanOrEqual(-6.2338, $beritaJakarta->latitude);
-        $this->assertLessThanOrEqual(-6.1838, $beritaJakarta->latitude);
-        $this->assertGreaterThanOrEqual(106.8206, $beritaJakarta->longitude);
-        $this->assertLessThanOrEqual(106.8706, $beritaJakarta->longitude);
-        $this->assertGreaterThanOrEqual(-11, $beritaFallback->latitude);
-        $this->assertLessThanOrEqual(6, $beritaFallback->latitude);
-        $this->assertGreaterThanOrEqual(95, $beritaFallback->longitude);
-        $this->assertLessThanOrEqual(141, $beritaFallback->longitude);
+        $this->assertSame(-6.2088, (float) $beritaJakarta->latitude);
+        $this->assertSame(106.8456, (float) $beritaJakarta->longitude);
+        $this->assertNull($beritaFallback->latitude);
+        $this->assertNull($beritaFallback->longitude);
 
-        Http::assertSentCount(5);
+        Http::assertSentCount(6);
     }
 
     public function test_authenticated_operator_can_poll_live_dashboard_metrics(): void
@@ -216,10 +206,13 @@ class OsintControllerTest extends TestCase
             ->assertJsonStructure([
                 'generated_at',
                 'counts' => ['total', 'merah', 'kuning', 'aman'],
+                'map_counts' => ['total', 'merah', 'kuning', 'aman'],
                 'threat_trend' => ['labels', 'merah', 'kuning', 'aman'],
                 'cognitive_trend' => ['labels', 'positif', 'negatif', 'netral'],
                 'sentiment' => ['percentages', 'total', 'bots'],
-            ]);
+            ])
+            ->assertJsonPath('map_counts.total', 1)
+            ->assertJsonPath('map_counts.merah', 1);
     }
 
     public function test_authenticated_operator_can_export_top_secret_pdf(): void
@@ -246,21 +239,10 @@ class OsintControllerTest extends TestCase
         $this->assertStringStartsWith('%PDF-', $response->getContent());
     }
 
-    public function test_guest_can_read_live_metrics_but_pdf_export_requires_authentication(): void
+    public function test_live_metrics_and_pdf_export_require_authentication(): void
     {
-        $this->getJson(route('osint.live-metrics'))
-            ->assertOk()
-            ->assertJsonPath('counts.total', 0);
-
+        $this->getJson(route('osint.live-metrics'))->assertUnauthorized();
         $this->get(route('osint.export.pdf'))->assertRedirect(route('login'));
-    }
-
-    public function test_guest_cannot_trigger_privileged_actions(): void
-    {
-        Http::preventStrayRequests();
-
-        $this->post(route('osint.fetch'))->assertRedirect(route('login'));
-        $this->post(route('osint.test.telegram'))->assertRedirect(route('login'));
     }
 
     private function rss(string $title, string $link): string

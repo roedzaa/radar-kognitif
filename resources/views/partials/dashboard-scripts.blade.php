@@ -120,52 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // SNA bubble plot with a lightweight connection renderer.
-    const networkCanvas = document.getElementById('socialNetworkChart');
-    if (networkCanvas && window.Chart) {
-        const connections = { id: 'networkConnections', beforeDatasetsDraw(chart) {
-            const { ctx, scales } = chart;
-            const points = chart.data.datasets.flatMap((dataset) => dataset.data);
-            if (!points.length) return;
-            const hub = points[0];
-            ctx.save(); ctx.strokeStyle = 'rgba(56,189,248,.16)'; ctx.lineWidth = 1;
-            points.slice(1).forEach((point, index) => {
-                const target = index % 3 === 0 ? hub : points[Math.max(0, Math.floor(index / 2))];
-                ctx.beginPath(); ctx.moveTo(scales.x.getPixelForValue(point.x), scales.y.getPixelForValue(point.y)); ctx.lineTo(scales.x.getPixelForValue(target.x), scales.y.getPixelForValue(target.y)); ctx.stroke();
-            }); ctx.restore();
-        }};
-        new Chart(networkCanvas, {
-            type: 'bubble',
-            plugins: [connections],
-            data: { datasets: [
-                { label: 'Target', data: [{x:50,y:50,r:14}], backgroundColor: '#22d3eecc', borderColor: '#67e8f9' },
-                { label: 'Botnet', data: [{x:22,y:69,r:8},{x:31,y:35,r:6},{x:69,y:74,r:9},{x:78,y:42,r:7},{x:61,y:20,r:5}], backgroundColor: '#f43f5ebb', borderColor: '#fb7185' },
-                { label: 'Buzzer', data: [{x:16,y:45,r:6},{x:40,y:77,r:7},{x:64,y:58,r:5},{x:84,y:67,r:6},{x:42,y:19,r:7}], backgroundColor: '#f59e0bbb', borderColor: '#fbbf24' },
-            ]},
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.dataset.label} // node ${context.dataIndex + 1}` } } }, scales: { x: { display: false, min: 0, max: 100 }, y: { display: false, min: 0, max: 100 } } },
-        });
-    }
-
-    // Simulated secure activity stream.
-    const terminal = document.getElementById('systemActivityConsole');
-    const terminalMessages = [
-        'Intercepting signal from sector 7...', 'Decrypting intelligence payload...',
-        'Hoax classifier scanning narrative...', 'Null route applied to hostile node.',
-        'Correlating botnet cluster signatures...', 'Refreshing geospatial threat matrix...',
-        'Verifying RSS source integrity...', 'Anomaly score recalculated.',
-    ];
-    const appendTerminalLog = () => {
-        if (!terminal) return;
-        const line = document.createElement('div');
-        const timestamp = new Date().toLocaleTimeString('id-ID', { hour12: false });
-        line.textContent = `[${timestamp}] > ${terminalMessages[Math.floor(Math.random() * terminalMessages.length)]}`;
-        terminal.appendChild(line);
-        while (terminal.children.length > 45) terminal.removeChild(terminal.firstElementChild);
-        terminal.scrollTop = terminal.scrollHeight;
-        window.setTimeout(appendTerminalLog, 1000 + Math.random() * 2000);
-    };
-    window.setTimeout(appendTerminalLog, 1200);
-
     const applySentiment = (prefix, percentage) => {
         updateText(`sentiment${prefix}Percent`, `${Number(percentage || 0).toFixed(1)}%`);
         const bar = document.getElementById(`sentiment${prefix}Bar`);
@@ -177,7 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const payload = await response.json();
             const counts = payload.counts || {};
-            [['statTotal','total'],['statMerah','merah'],['statKuning','kuning'],['statAman','aman'],['mappedCount','total'],['filterCountAll','total'],['filterCountMerah','merah'],['filterCountKuning','kuning'],['filterCountAman','aman']].forEach(([id,key]) => updateText(id, numberFormatter.format(counts[key] || 0)));
+            const mapCounts = payload.map_counts || {};
+            [['statTotal','total'],['statMerah','merah'],['statKuning','kuning'],['statAman','aman']].forEach(([id,key]) => updateText(id, numberFormatter.format(counts[key] || 0)));
+            [['mappedCount','total'],['filterCountAll','total'],['filterCountMerah','merah'],['filterCountKuning','kuning'],['filterCountAman','aman']].forEach(([id,key]) => updateText(id, numberFormatter.format(mapCounts[key] || 0)));
 
             if (threatTrendChart && payload.threat_trend) {
                 threatTrendChart.data.labels = payload.threat_trend.labels;

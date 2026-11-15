@@ -95,7 +95,7 @@
     </table>
 
     <div class="notice">
-        <strong>PERINGATAN KEAMANAN:</strong> Dokumen ini berisi hasil agregasi OSINT dan sinyal sosial sintetis untuk kepentingan demonstrasi sistem. Distribusi, penggandaan, dan pengungkapan kepada personel yang tidak memiliki otorisasi dilarang. Temuan wajib diverifikasi oleh analis manusia sebelum dijadikan dasar keputusan operasional.
+        <strong>CATATAN:</strong> Dokumen ini mengagregasi laporan dari feed RSS publik dan memberi label risiko berdasarkan pencocokan kata kunci. Sistem ini tidak terhubung ke platform media sosial; koordinat hanya dicantumkan jika lokasi disebut dalam judul laporan. Verifikasi setiap temuan sebelum digunakan sebagai dasar keputusan.
     </div>
 
     <table class="signature">

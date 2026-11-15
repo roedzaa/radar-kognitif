@@ -14,6 +14,8 @@ use Illuminate\Notifications\Notifiable;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
+    public const SHARED_TESTER_EMAIL = 'tester@radarkognitif.test';
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 

@@ -37,6 +37,19 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
+    public function test_shared_tester_credentials_can_authenticate(): void
+    {
+        $this->seed();
+
+        $response = $this->post('/login', [
+            'email' => User::SHARED_TESTER_EMAIL,
+            'password' => 'RadarKognitif-Tester-2026',
+        ]);
+
+        $this->assertAuthenticatedAs(User::where('email', User::SHARED_TESTER_EMAIL)->firstOrFail());
+        $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create();

@@ -24,91 +24,24 @@ class OsintScraperService
         ['sumber' => 'Tribun News', 'url' => 'https://www.tribunnews.com/rss'],
     ];
 
-    /** @var list<array{tag: string, sumber: string}> */
-    private const SOCIAL_PLATFORMS = [
-        ['tag' => 'X/TWITTER', 'sumber' => 'X/Twitter Intelligence'],
-        ['tag' => 'TIKTOK', 'sumber' => 'TikTok Viral Graph'],
-        ['tag' => 'INSTAGRAM', 'sumber' => 'IG Dark Web'],
-        ['tag' => 'FACEBOOK', 'sumber' => 'Facebook Influence Monitor'],
-        ['tag' => 'THREADS', 'sumber' => 'Threads Narrative Mesh'],
-    ];
-
-    /** @var list<string> */
-    private const SOCIAL_THEMES = [
-        'Lonjakan percakapan tentang serangan ransomware nasional',
-        'Narasi kebocoran data pemerintah mengalami eskalasi viral',
-        'Kluster akun anonim menyebarkan hoaks keamanan siber',
-        'Indikasi botnet mengamplifikasi isu serangan infrastruktur digital',
-        'Konten deepfake pejabat publik menyebar lintas platform',
-        'Percakapan mengenai peretasan sistem pertahanan meningkat tajam',
-        'Kampanye disinformasi terkoordinasi menargetkan kepercayaan publik',
-        'Tautan phishing bertema layanan pemerintah terdeteksi viral',
-        'Akun buzzer mendorong provokasi terkait insiden keamanan nasional',
-        'Eksploitasi zero-day menjadi topik dominan komunitas siber',
-    ];
-
-    /** @var list<array{nama: string, latitude: float, longitude: float}> */
-    private const INDONESIA_REGIONS = [
-        ['nama' => 'Sabang, Aceh', 'latitude' => 5.8942, 'longitude' => 95.3222],
-        ['nama' => 'Medan, Sumatera Utara', 'latitude' => 3.5952, 'longitude' => 98.6722],
-        ['nama' => 'Padang, Sumatera Barat', 'latitude' => -0.9471, 'longitude' => 100.4172],
-        ['nama' => 'Pekanbaru, Riau', 'latitude' => 0.5071, 'longitude' => 101.4478],
-        ['nama' => 'Tanjung Pinang, Kepulauan Riau', 'latitude' => 0.9186, 'longitude' => 104.4665],
-        ['nama' => 'Jambi', 'latitude' => -1.6101, 'longitude' => 103.6131],
-        ['nama' => 'Palembang, Sumatera Selatan', 'latitude' => -2.9761, 'longitude' => 104.7754],
-        ['nama' => 'Bengkulu', 'latitude' => -3.7928, 'longitude' => 102.2608],
-        ['nama' => 'Bandar Lampung', 'latitude' => -5.3971, 'longitude' => 105.2668],
-        ['nama' => 'Pangkal Pinang, Bangka Belitung', 'latitude' => -2.1316, 'longitude' => 106.1169],
-        ['nama' => 'Jakarta', 'latitude' => -6.2088, 'longitude' => 106.8456],
-        ['nama' => 'Bandung, Jawa Barat', 'latitude' => -6.9175, 'longitude' => 107.6191],
-        ['nama' => 'Semarang, Jawa Tengah', 'latitude' => -6.9667, 'longitude' => 110.4167],
-        ['nama' => 'Yogyakarta', 'latitude' => -7.7956, 'longitude' => 110.3695],
-        ['nama' => 'Surabaya, Jawa Timur', 'latitude' => -7.2575, 'longitude' => 112.7521],
-        ['nama' => 'Serang, Banten', 'latitude' => -6.1201, 'longitude' => 106.1503],
-        ['nama' => 'Denpasar, Bali', 'latitude' => -8.6705, 'longitude' => 115.2126],
-        ['nama' => 'Mataram, Nusa Tenggara Barat', 'latitude' => -8.5833, 'longitude' => 116.1167],
-        ['nama' => 'Kupang, Nusa Tenggara Timur', 'latitude' => -10.1772, 'longitude' => 123.6070],
-        ['nama' => 'Pontianak, Kalimantan Barat', 'latitude' => -0.0263, 'longitude' => 109.3425],
-        ['nama' => 'Palangka Raya, Kalimantan Tengah', 'latitude' => -2.2161, 'longitude' => 113.9137],
-        ['nama' => 'Banjarmasin, Kalimantan Selatan', 'latitude' => -3.3194, 'longitude' => 114.5908],
-        ['nama' => 'Samarinda, Kalimantan Timur', 'latitude' => -0.5022, 'longitude' => 117.1536],
-        ['nama' => 'Tanjung Selor, Kalimantan Utara', 'latitude' => 2.8375, 'longitude' => 117.3653],
-        ['nama' => 'Manado, Sulawesi Utara', 'latitude' => 1.4748, 'longitude' => 124.8421],
-        ['nama' => 'Gorontalo', 'latitude' => 0.5435, 'longitude' => 123.0568],
-        ['nama' => 'Palu, Sulawesi Tengah', 'latitude' => -0.9003, 'longitude' => 119.8779],
-        ['nama' => 'Mamuju, Sulawesi Barat', 'latitude' => -2.6774, 'longitude' => 118.8867],
-        ['nama' => 'Makassar, Sulawesi Selatan', 'latitude' => -5.1477, 'longitude' => 119.4327],
-        ['nama' => 'Kendari, Sulawesi Tenggara', 'latitude' => -3.9985, 'longitude' => 122.5120],
-        ['nama' => 'Ambon, Maluku', 'latitude' => -3.6547, 'longitude' => 128.1906],
-        ['nama' => 'Sofifi, Maluku Utara', 'latitude' => 0.7373, 'longitude' => 127.5588],
-        ['nama' => 'Manokwari, Papua Barat', 'latitude' => -0.8615, 'longitude' => 134.0620],
-        ['nama' => 'Sorong, Papua Barat Daya', 'latitude' => -0.8762, 'longitude' => 131.2558],
-        ['nama' => 'Jayapura, Papua', 'latitude' => -2.5337, 'longitude' => 140.7181],
-        ['nama' => 'Nabire, Papua Tengah', 'latitude' => -3.3636, 'longitude' => 135.5018],
-        ['nama' => 'Wamena, Papua Pegunungan', 'latitude' => -4.0959, 'longitude' => 138.9467],
-        ['nama' => 'Merauke, Papua Selatan', 'latitude' => -8.4991, 'longitude' => 140.4011],
-    ];
-
     /**
-     * @return array{rss: int, social: int, total: int}
+     * @return array{rss: int, total: int}
      */
     public function runFullScan(): array
     {
         $dictionary = KamusKerawanan::query()->get(['kata_kunci', 'tingkat_bahaya']);
         $rssCount = $this->scanRssChannels($dictionary);
-        $socialCount = $this->generateSyntheticSocialSignals(12);
 
         return [
             'rss' => $rssCount,
-            'social' => $socialCount,
-            'total' => $rssCount + $socialCount,
+            'total' => $rssCount,
         ];
     }
 
     public function sendTestAlert(): void
     {
         $this->sendTelegramAlert(
-            'SIMULASI DARURAT: Uji Coba Sistem Peringatan Dini Komando Siber',
+            'UJI KIRIM: Sistem Peringatan Dini Komando Siber',
             'https://tni.mil.id',
             now(),
         );
@@ -242,40 +175,8 @@ class OsintScraperService
         return $status;
     }
 
-    private function generateSyntheticSocialSignals(int $count): int
-    {
-        $statuses = ['Merah', 'Merah', 'Kuning', 'Kuning', 'Aman'];
-
-        for ($index = 0; $index < $count; $index++) {
-            $platform = self::SOCIAL_PLATFORMS[$index % count(self::SOCIAL_PLATFORMS)];
-            $theme = self::SOCIAL_THEMES[array_rand(self::SOCIAL_THEMES)];
-            $region = self::INDONESIA_REGIONS[array_rand(self::INDONESIA_REGIONS)];
-            $status = $statuses[array_rand($statuses)];
-            $signalCode = strtoupper(bin2hex(random_bytes(4)));
-            $title = "[SIMULASI {$platform['tag']}] {$theme} di {$region['nama']} // {$signalCode}";
-            $coordinates = $this->spreadCoordinates(
-                $region['latitude'],
-                $region['longitude'],
-                $title,
-                0.18,
-            );
-
-            BeritaOsint::create([
-                'judul' => $title,
-                'sumber' => $platform['sumber'],
-                'link' => null,
-                'waktu_publish' => now()->subMinutes(random_int(1, 180)),
-                'status_alert' => $status,
-                'latitude' => $coordinates['latitude'],
-                'longitude' => $coordinates['longitude'],
-            ]);
-        }
-
-        return $count;
-    }
-
     /**
-     * @return array{latitude: float, longitude: float}
+     * @return array{latitude: float|null, longitude: float|null}
      */
     private function detectCoordinates(string $title): array
     {
@@ -313,28 +214,11 @@ class OsintScraperService
             $pattern = '/(?<![\pL\pN])'.preg_quote($name, '/').'(?![\pL\pN])/iu';
 
             if (preg_match($pattern, $title) === 1) {
-                return $this->spreadCoordinates($latitude, $longitude, $title, 0.025);
+                return ['latitude' => $latitude, 'longitude' => $longitude];
             }
         }
 
-        $hash = unpack('Nindex', substr(hash('sha256', $title, true), 0, 4));
-        $region = self::INDONESIA_REGIONS[$hash['index'] % count(self::INDONESIA_REGIONS)];
-
-        return $this->spreadCoordinates($region['latitude'], $region['longitude'], $title, 0.35);
-    }
-
-    /**
-     * @return array{latitude: float, longitude: float}
-     */
-    private function spreadCoordinates(float $latitude, float $longitude, string $title, float $radius): array
-    {
-        $hash = unpack('Nlatitude/Nlongitude', substr(hash('sha256', 'coordinate:'.$title, true), 0, 8));
-        $scale = 4_294_967_295;
-
-        return [
-            'latitude' => round($latitude + (($hash['latitude'] / $scale) * 2 - 1) * $radius, 6),
-            'longitude' => round($longitude + (($hash['longitude'] / $scale) * 2 - 1) * $radius, 6),
-        ];
+        return ['latitude' => null, 'longitude' => null];
     }
 
     private function sendTelegramAlert(string $title, string $link, Carbon|string|null $publishedAt = null): void

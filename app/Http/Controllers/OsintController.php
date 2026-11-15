@@ -22,6 +22,7 @@ class OsintController extends Controller
     {
         $data = $this->dashboardData();
         $berita = $data['berita'];
+        $beritaTerpetakan = $data['beritaTerpetakan'];
 
         return response()->json([
             'generated_at' => now()->toIso8601String(),
@@ -30,6 +31,12 @@ class OsintController extends Controller
                 'merah' => $berita->where('status_alert', 'Merah')->count(),
                 'kuning' => $berita->where('status_alert', 'Kuning')->count(),
                 'aman' => $berita->where('status_alert', 'Aman')->count(),
+            ],
+            'map_counts' => [
+                'total' => $beritaTerpetakan->count(),
+                'merah' => $beritaTerpetakan->where('status_alert', 'Merah')->count(),
+                'kuning' => $beritaTerpetakan->where('status_alert', 'Kuning')->count(),
+                'aman' => $beritaTerpetakan->where('status_alert', 'Aman')->count(),
             ],
             'threat_trend' => $data['statistikTren'],
             'cognitive_trend' => $data['statistikKognitif'],
@@ -71,7 +78,7 @@ class OsintController extends Controller
 
         return back()->with(
             'success',
-            "Pemindaian Omni-Source berhasil. {$result['rss']} laporan RSS diproses dan {$result['social']} sinyal media sosial sintetis dibuat.",
+            "Pemindaian selesai. {$result['rss']} laporan dari feed RSS publik diproses; sumber media sosial belum terhubung.",
         );
     }
 
@@ -86,6 +93,9 @@ class OsintController extends Controller
     private function dashboardData(): array
     {
         $berita = BeritaOsint::query()->latest('waktu_publish')->get();
+        $beritaTerpetakan = $berita->filter(
+            fn (BeritaOsint $report): bool => $report->latitude !== null && $report->longitude !== null,
+        );
         $labels = [];
         $merah = [];
         $kuning = [];
@@ -167,6 +177,7 @@ class OsintController extends Controller
 
         return compact(
             'berita',
+            'beritaTerpetakan',
             'statistikTren',
             'metricKognitifTerbaru',
             'persentaseSentimen',
