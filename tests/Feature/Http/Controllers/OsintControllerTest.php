@@ -7,6 +7,7 @@ use App\Models\CognitiveMetric;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class OsintControllerTest extends TestCase
@@ -114,38 +115,64 @@ class OsintControllerTest extends TestCase
         $user = User::factory()->create();
 
         Http::preventStrayRequests();
-        Http::fake([
-            'https://news.google.com/rss/search?q=cybersecurity%20indonesia&hl=id&gl=ID&ceid=ID:id' => Http::response(
-                $this->rss('Insiden keamanan siber Jakarta', 'https://example.com/google-cyber'),
+        $feedUrls = [
+            'https://news.google.com/rss/search?q=cybersecurity%20indonesia&hl=id&gl=ID&ceid=ID:id',
+            'https://news.google.com/rss/search?q=serangan%20siber%20tni&hl=id&gl=ID&ceid=ID:id',
+            'https://www.antaranews.com/rss/terkini.xml',
+            'https://www.antaranews.com/rss/tekno.xml',
+            'https://www.antaranews.com/rss/ekonomi.xml',
+            'https://www.antaranews.com/rss/politik.xml',
+            'https://www.antaranews.com/rss/hukum.xml',
+            'https://www.cnnindonesia.com/nasional/rss',
+            'https://www.cnnindonesia.com/teknologi/rss',
+            'https://www.cnnindonesia.com/internasional/rss',
+            'https://www.cnnindonesia.com/ekonomi/rss',
+            'https://www.cnbcindonesia.com/news/rss',
+            'https://www.cnbcindonesia.com/tech/rss',
+            'https://www.tribunnews.com/rss',
+            'https://news.detik.com/rss',
+            'https://inet.detik.com/rss',
+            'https://www.okezone.com/rss',
+            'https://www.sindonews.com/feed',
+            'https://nasional.sindonews.com/rss',
+            'https://www.republika.co.id/rss',
+            'https://feeds.bbci.co.uk/indonesia/rss.xml',
+            'https://katadata.co.id/rss',
+            'https://www.jpnn.com/rss',
+            'https://mediaindonesia.com/feed/all',
+            'https://rri.co.id/rss',
+            'https://www.kemhan.go.id/feed',
+        ];
+        $failedFeedUrl = 'https://www.kemhan.go.id/feed';
+        $fakes = [];
+
+        foreach ($feedUrls as $index => $url) {
+            if ($url === $failedFeedUrl) {
+                $fakes[$url] = Http::failedConnection();
+
+                continue;
+            }
+
+            $title = match ($index) {
+                0 => 'Insiden keamanan siber Jakarta',
+                2 => 'Perkembangan nasional terbaru',
+                11 => 'Kabar strategis Natuna',
+                13 => 'Laporan keamanan dari Papua',
+                default => 'Laporan RSS test '.($index + 1),
+            };
+            $fakes[$url] = Http::response(
+                $this->rss($title, 'https://example.com/feed-'.$index),
                 200,
                 ['Content-Type' => 'application/xml'],
-            ),
-            'https://news.google.com/rss/search?q=serangan%20siber%20tni&hl=id&gl=ID&ceid=ID:id' => Http::response(
-                $this->rss('Ancaman digital di Papua', 'https://example.com/google-tni'),
-                200,
-                ['Content-Type' => 'application/xml'],
-            ),
-            'https://www.antaranews.com/rss/terkini.xml' => Http::response(
-                $this->rss('Perkembangan nasional terbaru', 'https://example.com/antara'),
-                200,
-                ['Content-Type' => 'text/xml'],
-            ),
-            'https://www.cnnindonesia.com/nasional/rss' => Http::response(
-                $this->rss('Laporan teknologi dari Surabaya', 'https://example.com/cnn'),
-                200,
-                ['Content-Type' => 'text/xml'],
-            ),
-            'https://www.cnbcindonesia.com/news/rss' => Http::response(
-                $this->rss('Kabar strategis Natuna', 'https://example.com/cnbc'),
-                200,
-                ['Content-Type' => 'text/xml'],
-            ),
-            'https://www.tribunnews.com/rss' => Http::response(
-                $this->rss('Laporan keamanan dari Papua', 'https://example.com/tribun'),
-                200,
-                ['Content-Type' => 'text/xml'],
-            ),
-        ]);
+            );
+        }
+
+        Http::fake($fakes);
+        Log::shouldReceive('warning')
+            ->once()
+            ->withArgs(fn (string $message, array $context): bool => $message === '[MILITER EYES] Gagal memuat feed RSS.'
+                && $context['sumber'] === 'Kementerian Pertahanan'
+                && $context['url'] === $failedFeedUrl);
 
         $response = $this
             ->actingAs($user)
@@ -156,10 +183,10 @@ class OsintControllerTest extends TestCase
             ->assertRedirect(route('osint.index'))
             ->assertSessionHas(
                 'success',
-                'Pemindaian selesai. 6 laporan dari feed RSS publik diproses; sumber media sosial belum terhubung.',
+                'Pemindaian selesai. 25 laporan dari feed RSS publik diproses; sumber media sosial belum terhubung.',
             );
 
-        $this->assertDatabaseCount('berita_osint', 6);
+        $this->assertDatabaseCount('berita_osint', 25);
         $this->assertDatabaseHas('berita_osint', [
             'judul' => 'Insiden keamanan siber Jakarta',
             'sumber' => 'Google News - Cybersecurity Indonesia',
@@ -172,6 +199,10 @@ class OsintControllerTest extends TestCase
             'judul' => 'Laporan keamanan dari Papua',
             'sumber' => 'Tribun News',
         ]);
+        $this->assertDatabaseHas('berita_osint', [
+            'judul' => 'Laporan RSS test 25',
+            'sumber' => 'RRI',
+        ]);
         $this->assertSame(0, BeritaOsint::where('judul', 'like', '[SIMULASI%')->count());
 
         $beritaJakarta = BeritaOsint::where('judul', 'Insiden keamanan siber Jakarta')->firstOrFail();
@@ -182,7 +213,7 @@ class OsintControllerTest extends TestCase
         $this->assertNull($beritaFallback->latitude);
         $this->assertNull($beritaFallback->longitude);
 
-        Http::assertSentCount(6);
+        Http::assertSentCount(25);
     }
 
     public function test_authenticated_operator_can_poll_live_dashboard_metrics(): void

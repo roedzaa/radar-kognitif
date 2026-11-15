@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\BeritaOsint;
 use App\Models\KamusKerawanan;
+use Illuminate\Http\Client\Pool;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
@@ -19,9 +21,29 @@ class OsintScraperService
         ['sumber' => 'Google News - Cybersecurity Indonesia', 'url' => 'https://news.google.com/rss/search?q=cybersecurity%20indonesia&hl=id&gl=ID&ceid=ID:id'],
         ['sumber' => 'Google News - Serangan Siber TNI', 'url' => 'https://news.google.com/rss/search?q=serangan%20siber%20tni&hl=id&gl=ID&ceid=ID:id'],
         ['sumber' => 'Antara News', 'url' => 'https://www.antaranews.com/rss/terkini.xml'],
+        ['sumber' => 'Antara News - Teknologi', 'url' => 'https://www.antaranews.com/rss/tekno.xml'],
+        ['sumber' => 'Antara News - Ekonomi', 'url' => 'https://www.antaranews.com/rss/ekonomi.xml'],
+        ['sumber' => 'Antara News - Politik', 'url' => 'https://www.antaranews.com/rss/politik.xml'],
+        ['sumber' => 'Antara News - Hukum', 'url' => 'https://www.antaranews.com/rss/hukum.xml'],
         ['sumber' => 'CNN Indonesia', 'url' => 'https://www.cnnindonesia.com/nasional/rss'],
+        ['sumber' => 'CNN Indonesia - Teknologi', 'url' => 'https://www.cnnindonesia.com/teknologi/rss'],
+        ['sumber' => 'CNN Indonesia - Internasional', 'url' => 'https://www.cnnindonesia.com/internasional/rss'],
+        ['sumber' => 'CNN Indonesia - Ekonomi', 'url' => 'https://www.cnnindonesia.com/ekonomi/rss'],
         ['sumber' => 'CNBC Indonesia', 'url' => 'https://www.cnbcindonesia.com/news/rss'],
+        ['sumber' => 'CNBC Indonesia - Teknologi', 'url' => 'https://www.cnbcindonesia.com/tech/rss'],
         ['sumber' => 'Tribun News', 'url' => 'https://www.tribunnews.com/rss'],
+        ['sumber' => 'Detikcom', 'url' => 'https://news.detik.com/rss'],
+        ['sumber' => 'Detik Inet', 'url' => 'https://inet.detik.com/rss'],
+        ['sumber' => 'Okezone', 'url' => 'https://www.okezone.com/rss'],
+        ['sumber' => 'SINDOnews', 'url' => 'https://www.sindonews.com/feed'],
+        ['sumber' => 'SINDOnews Nasional', 'url' => 'https://nasional.sindonews.com/rss'],
+        ['sumber' => 'Republika', 'url' => 'https://www.republika.co.id/rss'],
+        ['sumber' => 'BBC News Indonesia', 'url' => 'https://feeds.bbci.co.uk/indonesia/rss.xml'],
+        ['sumber' => 'Katadata', 'url' => 'https://katadata.co.id/rss'],
+        ['sumber' => 'JPNN', 'url' => 'https://www.jpnn.com/rss'],
+        ['sumber' => 'Media Indonesia', 'url' => 'https://mediaindonesia.com/feed/all'],
+        ['sumber' => 'RRI', 'url' => 'https://rri.co.id/rss'],
+        ['sumber' => 'Kementerian Pertahanan', 'url' => 'https://www.kemhan.go.id/feed'],
     ];
 
     /**
@@ -56,17 +78,34 @@ class OsintScraperService
         $processed = 0;
 
         try {
-            foreach (self::RSS_CHANNELS as $channel) {
-                try {
-                    $response = Http::withoutVerifying()
+            $responses = Http::pool(function (Pool $pool): void {
+                foreach (self::RSS_CHANNELS as $channel) {
+                    $pool->as($channel['sumber'])
+                        ->withoutVerifying()
                         ->withUserAgent(self::BROWSER_USER_AGENT)
-                        ->timeout(10)
+                        ->connectTimeout(3)
+                        ->timeout(6)
                         ->get($channel['url']);
-                } catch (Throwable $exception) {
+                }
+            }, 10);
+
+            foreach (self::RSS_CHANNELS as $channel) {
+                $response = $responses[$channel['sumber']] ?? null;
+
+                if ($response instanceof Throwable) {
                     Log::warning('[MILITER EYES] Gagal memuat feed RSS.', [
                         'sumber' => $channel['sumber'],
                         'url' => $channel['url'],
-                        'error' => $exception->getMessage(),
+                        'error' => $response->getMessage(),
+                    ]);
+
+                    continue;
+                }
+
+                if (! $response instanceof Response) {
+                    Log::warning('[MILITER EYES] Respons feed RSS tidak tersedia.', [
+                        'sumber' => $channel['sumber'],
+                        'url' => $channel['url'],
                     ]);
 
                     continue;

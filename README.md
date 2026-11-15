@@ -13,6 +13,16 @@ RADAR KOGNITIF is a prototype dashboard for open-source intelligence (OSINT) mon
 
 Reports are fetched from configured public RSS feeds and classified by matching their titles against a keyword dictionary. The application is not connected to social-media platforms or an AI sentiment, bot, or hoax classifier, so it does not display social-media metrics. A report is mapped only when its title names a recognized location; otherwise, its coordinates are left empty. Risk labels are heuristic and require human verification.
 
+The scanner currently checks 26 RSS feeds from 15 publishers and services:
+
+- Google News (cybersecurity Indonesia and cyber attacks on TNI searches)
+- ANTARA News (latest, technology, economy, politics, and law)
+- CNN Indonesia (national, technology, international, and economy)
+- CNBC Indonesia (news and technology)
+- Tribun News, Detikcom (news and technology), Okezone, and SINDOnews (general and national)
+- Republika, BBC News Indonesia, Katadata, JPNN, and Media Indonesia
+- Radio Republik Indonesia (RRI) and the Ministry of Defense (Kemhan)
+
 ## Run locally
 
 Requirements: PHP and Composer, Node.js and npm, and the PHP SQLite extension.
