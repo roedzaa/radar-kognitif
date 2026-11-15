@@ -4,12 +4,13 @@ use App\Http\Controllers\OsintController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', [OsintController::class, 'index'])->name('osint.index');
+Route::get('/dashboard/live-metrics', [OsintController::class, 'liveMetrics'])
+    ->middleware('throttle:60,1')
+    ->name('osint.live-metrics');
+
 Route::middleware('auth')->group(function () {
-    Route::get('/', [OsintController::class, 'index'])->name('osint.index');
     Route::get('/dashboard', [OsintController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/live-metrics', [OsintController::class, 'liveMetrics'])
-        ->middleware('throttle:60,1')
-        ->name('osint.live-metrics');
     Route::get('/ekspor-intelijen', [OsintController::class, 'exportPdf'])
         ->middleware('throttle:10,1')
         ->name('osint.export.pdf');

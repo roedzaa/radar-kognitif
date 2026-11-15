@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\BeritaOsint;
 use App\Models\CognitiveMetric;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -18,13 +19,72 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(KamusKerawananSeeder::class);
 
-        User::firstOrCreate(
-            ['email' => 'admin@radarkognitif.mil.id'],
+        if (! app()->isProduction()) {
+            User::firstOrCreate(
+                ['email' => 'admin@radarkognitif.mil.id'],
+                [
+                    'name' => 'Administrator Radar Kognitif',
+                    'password' => 'password123',
+                ],
+            );
+        }
+
+        $demoReports = [
             [
-                'name' => 'Administrator Radar Kognitif',
-                'password' => 'password123',
+                'judul' => '[SIMULASI X/TWITTER] Hoaks keamanan siber beredar di Jayapura // DEMO-001',
+                'sumber' => 'X/Twitter Intelligence',
+                'status_alert' => 'Merah',
+                'latitude' => -2.5337,
+                'longitude' => 140.7181,
+                'minutes_ago' => 18,
             ],
-        );
+            [
+                'judul' => '[SIMULASI THREADS] Narasi disinformasi terpantau di Kupang // DEMO-002',
+                'sumber' => 'Threads Narrative Mesh',
+                'status_alert' => 'Kuning',
+                'latitude' => -10.1772,
+                'longitude' => 123.6070,
+                'minutes_ago' => 34,
+            ],
+            [
+                'judul' => '[SIMULASI FACEBOOK] Tautan phishing layanan publik di Mataram // DEMO-003',
+                'sumber' => 'Facebook Influence Monitor',
+                'status_alert' => 'Merah',
+                'latitude' => -8.5833,
+                'longitude' => 116.1167,
+                'minutes_ago' => 51,
+            ],
+            [
+                'judul' => '[SIMULASI TIKTOK] Percakapan keamanan digital meningkat di Bandung // DEMO-004',
+                'sumber' => 'TikTok Viral Graph',
+                'status_alert' => 'Kuning',
+                'latitude' => -6.9175,
+                'longitude' => 107.6191,
+                'minutes_ago' => 67,
+            ],
+            [
+                'judul' => '[SIMULASI INSTAGRAM] Aktivitas informasi normal di Surabaya // DEMO-005',
+                'sumber' => 'IG Dark Web',
+                'status_alert' => 'Aman',
+                'latitude' => -7.2575,
+                'longitude' => 112.7521,
+                'minutes_ago' => 83,
+            ],
+        ];
+
+        foreach ($demoReports as $report) {
+            BeritaOsint::updateOrCreate(
+                ['judul' => $report['judul']],
+                [
+                    'sumber' => $report['sumber'],
+                    'link' => null,
+                    'waktu_publish' => now('Asia/Jakarta')->subMinutes($report['minutes_ago']),
+                    'status_alert' => $report['status_alert'],
+                    'latitude' => $report['latitude'],
+                    'longitude' => $report['longitude'],
+                ],
+            );
+        }
 
         $metricHarian = [
             [

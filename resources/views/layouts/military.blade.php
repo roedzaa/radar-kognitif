@@ -44,7 +44,7 @@
     </main>
 
     <footer class="border-t border-slate-800/70 px-6 py-5 text-center font-mono text-[9px] tracking-[.2em] text-slate-600">
-        MILITER EYES // PUSAT KOMANDO SIBER TNI AD // AKSES TERKLASIFIKASI
+        PROTOTIPE LOMBA // DEMO PUBLIK // BUKAN SISTEM RESMI
     </footer>
 
     @yield('scripts')

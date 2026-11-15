@@ -4,6 +4,7 @@ namespace Tests\Feature\Database;
 
 use App\Models\CognitiveMetric;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -30,9 +31,25 @@ class DatabaseSeederTest extends TestCase
             23,
             CognitiveMetric::whereDate('tanggal', '2026-10-25')->value('jumlah_bot_terdeteksi'),
         );
+        $this->assertDatabaseHas('berita_osint', [
+            'judul' => '[SIMULASI X/TWITTER] Hoaks keamanan siber beredar di Jayapura // DEMO-001',
+            'status_alert' => 'Merah',
+        ]);
 
         $admin = User::where('email', 'admin@radarkognitif.mil.id')->firstOrFail();
 
         $this->assertTrue(Hash::check('password123', $admin->password));
+    }
+
+    public function test_production_seeder_does_not_create_the_shared_admin_account(): void
+    {
+        $this->app->detectEnvironment(fn (): string => 'production');
+
+        app(DatabaseSeeder::class)->run();
+
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseHas('berita_osint', [
+            'judul' => '[SIMULASI X/TWITTER] Hoaks keamanan siber beredar di Jayapura // DEMO-001',
+        ]);
     }
 }

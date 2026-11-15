@@ -13,17 +13,21 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <a href="{{ route('osint.export.pdf') }}" class="hidden items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-[9px] font-bold tracking-wider text-slate-300 transition hover:border-emerald-500/40 hover:text-emerald-300 sm:inline-flex">
-                EKSPOR INTELIJEN (PDF)
-            </a>
-            <div class="hidden border-l border-slate-800 pl-3 text-right md:block">
-                <div class="text-xs font-semibold text-slate-200">{{ auth()->user()->name }}</div>
-                <div class="font-mono text-[8px] text-slate-500">{{ auth()->user()->email }}</div>
-            </div>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="rounded-md border border-rose-500/25 bg-rose-500/5 px-3 py-2 font-mono text-[9px] font-bold tracking-wider text-rose-400 transition hover:bg-rose-500/15">LOGOUT</button>
-            </form>
+            @auth
+                <a href="{{ route('osint.export.pdf') }}" class="hidden items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-[9px] font-bold tracking-wider text-slate-300 transition hover:border-emerald-500/40 hover:text-emerald-300 sm:inline-flex">
+                    EKSPOR INTELIJEN (PDF)
+                </a>
+                <div class="hidden border-l border-slate-800 pl-3 text-right md:block">
+                    <div class="text-xs font-semibold text-slate-200">{{ auth()->user()->name }}</div>
+                    <div class="font-mono text-[8px] text-slate-500">{{ auth()->user()->email }}</div>
+                </div>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="rounded-md border border-rose-500/25 bg-rose-500/5 px-3 py-2 font-mono text-[9px] font-bold tracking-wider text-rose-400 transition hover:bg-rose-500/15">LOGOUT</button>
+                </form>
+            @else
+                <span class="rounded-md border border-cyan-500/25 bg-cyan-500/5 px-3 py-2 font-mono text-[9px] font-bold tracking-wider text-cyan-300">DEMO PUBLIK</span>
+            @endauth
         </div>
     </div>
 
